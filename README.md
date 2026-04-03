@@ -1,3 +1,12 @@
+---
+title: SHPS v2.0 - Structural Health Prediction
+emoji: 🏗️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: true
+---
+
 # SHPS v2.0 — Structural Health Prediction System
 
 **Predictive asset management for civil infrastructure** — turns raw sensor telemetry into maintenance decisions with 95% confidence intervals and explainable AI.
