@@ -40,4 +40,4 @@ LABEL maintainer="SHPSv2 Lead Engineer" \
 EXPOSE 7860
 
 # Start Flask with Gunicorn for production concurrency
-CMD ["gunicorn", "--bind", "0.0.0.0:7860", "--workers", "4", "--threads", "2", "api.app:app"]
+CMD ["gunicorn", "--timeout", "120", "--bind", "0.0.0.0:7860", "--workers", "4", "--threads", "2", "api.app:app"]
