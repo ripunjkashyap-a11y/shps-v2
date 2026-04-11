@@ -82,6 +82,7 @@ ipython_config.py
 
 # Environments
 .env
+.env.*
 .venv
 env/
 venv/
@@ -89,6 +90,18 @@ ENV/
 env.bak/
 venv.bak/
 *.env
+
+# Secrets / Credentials / Certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.secret
+*.token
+credentials.json
+secrets.json
+service_account*.json
 
 # Editor tools
 .idea/
@@ -101,6 +114,8 @@ data/*.csv
 features/*.csv
 models/*.pkl
 models/*.h5
+models/*.keras
+models/*.weights.h5
 models/model_metrics.json
 models/*.json
 
@@ -109,18 +124,19 @@ stitch_mockup.html
 test_results/
 test_predict.py
 test_api.py
-.playwright-mcp/
 tmp/
 
 # Portfolio & Local Workspace
 *.md
 !README.md
-!model_card.md
 *.png
 !assets/*.png
 shps-v2.code-workspace
 push.bat
+NUL
 
+# Agent / IDE tooling
 .agent/
 .claude/
-convert_models.py
+.playwright-mcp/
+convert_*.py
