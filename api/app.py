@@ -61,6 +61,11 @@ app.register_blueprint(whatif_bp)
 app.register_blueprint(simulate_bp)
 app.register_blueprint(report_bp)
 
+@app.route('/health')
+def health():
+    from api.model_loader import XGB_HEALTH
+    return jsonify({"status": "ok", "models_loaded": XGB_HEALTH is not None}), 200
+
 if __name__ == '__main__':
     print("DEBUG: Starting server on 127.0.0.1:5005")
     app.run(host='0.0.0.0', port=5005, debug=True)

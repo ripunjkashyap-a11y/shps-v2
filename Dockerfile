@@ -3,9 +3,12 @@ FROM python:3.10-slim AS builder
 
 WORKDIR /build
 
-# Install build dependencies
+# Install build dependencies + libs required to compile ML packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    libopenblas0 \
+    libgomp1 \
+    libgfortran5 \
     && rm -rf /var/lib/apt/lists/*
 
 # Optimize pip layers
@@ -14,6 +17,13 @@ RUN pip install --user --no-cache-dir -r requirements.txt
 
 # --- Stage 2: Production Runtime ---
 FROM python:3.10-slim
+
+# Install runtime system libraries required by TensorFlow, NumPy, XGBoost
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libopenblas0 \
+    libgomp1 \
+    libgfortran5 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Security: Avoid running as root
 RUN useradd -m -u 1000 user
@@ -40,4 +50,7 @@ LABEL maintainer="SHPSv2 Lead Engineer" \
 EXPOSE 7860
 
 # Start Flask with Gunicorn for production concurrency
-CMD ["gunicorn", "--timeout", "120", "--bind", "0.0.0.0:7860", "--workers", "4", "--threads", "2", "api.app:app"]
+# - timeout 300: allows model warm-up (4 XGB + LSTM) on cold start
+# - workers 2: prevents loading models 4x in RAM
+# - access-logfile -: routes request logs to stdout for podman logs
+CMD ["gunicorn", "--timeout", "300", "--bind", "0.0.0.0:7860", "--workers", "2", "--threads", "2", "--access-logfile", "-", "api.app:app"]
