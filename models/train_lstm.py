@@ -65,7 +65,7 @@ model = Sequential([
 model.compile(optimizer='adam', loss='mse', metrics=['mae'])
 
 print("\n--- Training Model 3: LSTM Deterioration Forecast ---")
-history = model.fit(
+model.fit(
     X_train, y_train,
     epochs=15,
     batch_size=32,

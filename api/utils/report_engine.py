@@ -1,6 +1,5 @@
 import io
 import datetime
-import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from reportlab.lib.pagesizes import letter
@@ -24,13 +23,16 @@ class StructuralReportEngine:
 
     def _get_status_color(self, condition):
         cond = condition.lower()
-        if cond in ['good', 'safe']: return colors.HexColor('#4ade80')  # Green
-        if cond in ['fair', 'safe with monitoring']: return colors.HexColor('#fb923c')  # Orange
+        if cond in ['good', 'safe']:
+            return colors.HexColor('#4ade80')  # Green
+        if cond in ['fair', 'safe with monitoring']:
+            return colors.HexColor('#fb923c')  # Orange
         return colors.HexColor('#f87171')  # Red
 
     def _generate_shap_chart_image(self):
         shap_vals = self.explanation.get('shap_values', {})
-        if not shap_vals: return None
+        if not shap_vals:
+            return None
         
         # Sort and take top 8 for clean display
         sorted_shap = sorted(shap_vals.items(), key=lambda item: abs(item[1]), reverse=True)[:8]
@@ -55,7 +57,8 @@ class StructuralReportEngine:
 
     def _generate_forecast_chart_image(self):
         forecast = self.forecast
-        if not forecast: return None
+        if not forecast:
+            return None
         
         years = forecast.get('years', [])
         det = forecast.get('deterioration', [])
@@ -97,7 +100,7 @@ class StructuralReportEngine:
         
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         story.append(Paragraph(f"<b>Date/Time:</b> {timestamp} &nbsp;&nbsp;&nbsp; <b>Structure ID:</b> SHPS-92A", normal_style))
-        story.append(Paragraph(f"<b>Inspector ID:</b> SHPS-ENG-44 &nbsp;&nbsp;&nbsp; <b>GPS Coordinates:</b> 40.7128° N, 74.0060° W", normal_style))
+        story.append(Paragraph("<b>Inspector ID:</b> SHPS-ENG-44 &nbsp;&nbsp;&nbsp; <b>GPS Coordinates:</b> 40.7128° N, 74.0060° W", normal_style))
         story.append(Spacer(1, 20))
 
         # 2. Executive Summary

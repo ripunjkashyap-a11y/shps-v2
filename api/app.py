@@ -62,5 +62,5 @@ app.register_blueprint(simulate_bp)
 app.register_blueprint(report_bp)
 
 if __name__ == '__main__':
-    print(f"DEBUG: Starting server on 127.0.0.1:5005")
+    print("DEBUG: Starting server on 127.0.0.1:5005")
     app.run(host='0.0.0.0', port=5005, debug=True)

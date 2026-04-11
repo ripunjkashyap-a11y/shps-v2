@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify, send_file
 import io
-from pydantic import ValidationError
 from api.utils.report_engine import StructuralReportEngine
 
 report_bp = Blueprint('report', __name__)

@@ -91,7 +91,7 @@ with open('models/xgb_rul_upper.pkl', 'wb') as f:
 preds_lower = xgb_rul_lower.predict(X_test[:5])
 preds_upper = xgb_rul_upper.predict(X_test[:5])
 spreads = preds_upper - preds_lower
-print(f"\nSample Quantile Spreads (Upper - Lower) for RUL:")
+print("\nSample Quantile Spreads (Upper - Lower) for RUL:")
 print(spreads.round(2))
 
 # Save metrics
