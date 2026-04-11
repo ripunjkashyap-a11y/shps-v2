@@ -2,7 +2,7 @@
 
 **Predictive asset management for civil infrastructure** — turns raw sensor telemetry into maintenance decisions with 95% confidence intervals and explainable AI.
 
-**Live Demo**: [huggingface.co/spaces/ripunjkashyap-a11y/shps-v2](https://huggingface.co/spaces/ripunjkashyap-a11y/shps-v2)
+**Live Demo**: https://huggingface.co/spaces/Ripunk/shps-v2
 
 ---
 
