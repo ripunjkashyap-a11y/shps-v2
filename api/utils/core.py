@@ -45,28 +45,49 @@ def format_pydantic_errors(e) -> list:
         "type": err["type"]
     } for err in e.errors(include_url=False, include_context=False)]
 
-def evaluate_health_status(health_score: float) -> dict:
-    # Condition + safety status logic
-    if health_score > 80:
-        condition, safety_status = "Good", "Safe"
-    elif health_score >= 60:
-        condition, safety_status = "Fair", "Safe with Monitoring"
-    elif health_score >= 40:
-        condition, safety_status = "Poor", "Restricted Use"
+def evaluate_status(health_score: float, rul_years: float) -> dict:
+    # Default status based on ML Health Score
+    status_reason = "Nominal Analysis"
+    if health_score > 85:
+        condition = "Good"
+        safety_status = "Safe"
+        priority = "low"
+        label = "Routine inspection in 12 months"
+        color = "green"
+    elif health_score > 60:
+        condition = "Fair"
+        safety_status = "Safe with Monitoring"
+        priority = "medium"
+        label = "Schedule Ultrasonic Testing within 90 days"
+        color = "orange"
     else:
-        condition, safety_status = "Critical", "Unsafe \u2014 Evacuate"
+        condition = "Poor"
+        safety_status = "Restricted Use"
+        priority = "high"
+        label = "Urgent Support Reinforcement Required"
+        color = "orange"
 
-    # Maintenance action logic
-    if health_score > 80:
-        priority, label, color = "low", "Routine inspection in 12 months", "green"
-    elif health_score >= 50:
-        priority, label, color = "medium", "Schedule Ultrasonic Testing within 90 days", "orange"
-    else:
-        priority, label, color = "critical", "IMMEDIATE STRUCTURAL AUDIT REQUIRED", "red"
+    # FAIL-SAFE OVERRIDE: RUL takes precedence over Health Score for safety
+    if rul_years < 3.0:
+        condition = "Critical"
+        safety_status = "Unsafe \u2014 Evacuate"
+        priority = "critical"
+        label = "IMMEDIATE STRUCTURAL AUDIT REQUIRED"
+        color = "red"
+        status_reason = "Imminent Failure Risk (Low RUL)"
+    elif rul_years < 5.0 and condition == "Good":
+        condition = "Fair"
+        safety_status = "Safe with Monitoring"
+        priority = "medium"
+        label = "Schedule Ultrasonic Testing within 90 days"
+        color = "orange"
+        status_reason = "Maintenance Required (RUL Threshold)"
         
     return {
         "condition": condition,
         "safety_status": safety_status,
+        "status_reason": status_reason,
+        "priority_color": color, 
         "maintenance_action": {
             "priority": priority,
             "label": label,

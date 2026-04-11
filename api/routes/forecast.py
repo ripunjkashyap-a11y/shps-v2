@@ -20,8 +20,19 @@ def forecast():
     except ValidationError as e:
         return jsonify({"error": "Validation Error", "details": format_pydantic_errors(e)}), 422
 
+    if LSTM_DETERIORATION is None:
+        years = list(range(1, 26))
+        return jsonify({
+            "unavailable": True,
+            "message": "Forecast model not trained. Run models/train_lstm.py.",
+            "years": years,
+            "deterioration": [],
+            "confidence_upper": [],
+            "confidence_lower": []
+        })
+
     X = calculate_engineered_features(raw_dict)
-    
+
     # Predict with LSTM returning 25 values per sample
     deterioration_pred = LSTM_DETERIORATION.predict(np.array(X), verbose=0)[0]
     

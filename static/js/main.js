@@ -135,13 +135,9 @@ async function refreshUI() {
     });
 
     try {
-        const [predictRes, forecastRes, explainRes] = await Promise.all([
+        // Predict + Explain are critical — fail loudly if either errors
+        const [predictRes, explainRes] = await Promise.all([
             fetch('/predict', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(formData)
-            }),
-            fetch('/forecast', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(formData)
@@ -154,27 +150,49 @@ async function refreshUI() {
         ]);
 
         // Error handling for non-OK responses (e.g., 422 Validation Error)
-        if (!predictRes.ok || !forecastRes.ok || !explainRes.ok) {
+        if (!predictRes.ok || !explainRes.ok) {
             const errData = await predictRes.json();
             const errMsg = errData.details ? errData.details[0].msg : (errData.error || "Analysis failed");
             showValidationError(errMsg);
             return;
         }
 
-        const predictData  = await predictRes.json();
-        const forecastData = await forecastRes.json();
-        const explainData  = await explainRes.json();
+        const predictData = await predictRes.json();
+        const explainData = await explainRes.json();
 
         // Remove loading classes
         document.querySelectorAll('.loading').forEach(el => el.classList.remove('loading'));
 
         updatePredictionUI(predictData, formData);
-        updateForecastChart(forecastData);
         updateShapChart(explainData);
+
+        // Forecast is optional — fetch independently and handle gracefully
+        fetch('/forecast', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(formData)
+        }).then(r => r.json()).then(forecastData => {
+            if (!forecastData.unavailable) {
+                updateForecastChart(forecastData);
+                currentForecastData = forecastData;
+            } else {
+                const canvas = document.getElementById('forecastChart');
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    if (forecastChart) { forecastChart.destroy(); forecastChart = null; }
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#acaaae';
+                    ctx.font = '12px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Forecast offline — run models/train_lstm.py', canvas.width / 2, canvas.height / 2);
+                }
+            }
+        }).catch(() => {});
+
+        const forecastData = { years: [], deterioration: [], confidence_upper: [], confidence_lower: [] };
 
         currentInputs = formData;
         currentPredictData = predictData;
-        currentForecastData = forecastData;
         currentExplainData = explainData;
 
         baseHealthScore = predictData.health_score;
@@ -250,9 +268,7 @@ function updatePredictionUI(data, formData) {
     updateGauge(score);
 
     // Condition + colour
-    let condColor = COLORS.secondary;
-    if (score < 50)      condColor = COLORS.error;
-    else if (score < 80) condColor = COLORS.warning;
+    const condColor = data.priority_color; // SSOT from backend
 
     const condEl = document.getElementById('condition_label');
     if (condEl) {
@@ -280,7 +296,7 @@ function updatePredictionUI(data, formData) {
 
     // RUL
     const rul    = data.RUL_years.toFixed(1);
-    const margin = (data.RUL_confidence_high - data.RUL_years).toFixed(1);
+    const margin = data.margin.toFixed(1); // SSOT margin from backend
     updateText('rul_years',           rul + ' yr');
     updateText('rul_mini',            rul + ' yr');
     updateText('rul_confidence',      `Confidence: ±${margin} Yrs`);
@@ -334,13 +350,14 @@ function applyMaintenanceAction(data) {
 // ─── Technical Analysis Log ──────────────────────────────────────
 function updateAnalysisLog(data) {
     const hs   = data.health_score;
-    const risk = hs > 80 ? 'LOW (<5%)' : hs > 50 ? 'MODERATE' : 'HIGH (>40%)';
+    // Map backend priority_color to an overall risk rating
+    const risk = data.priority_color === 'green' ? 'LOW (<5%)' : data.priority_color === 'orange' ? 'MODERATE' : 'HIGH (>40%)';
     const idx  = data.RUL_years < 10 ? 'ELEVATED' : 'NOMINAL';
 
     const logEl = document.getElementById('analysis_log_text');
     if (logEl) {
         logEl.innerHTML = `Structural assessment complete. Health index at <span style="color:#f0edf1;font-weight:600">${hs.toFixed(1)}%</span>.
-Condition rated <span style="color:${hs>80?COLORS.secondary:hs>50?COLORS.warning:COLORS.error};font-weight:600">${data.condition}</span> — ${data.safety_status}.
+Condition rated <span style="color:${data.priority_color};font-weight:600">${data.condition}</span> — ${data.safety_status}. Reason: ${data.status_reason}.
 RUL estimated at <span style="color:#f0edf1;font-weight:600">${data.RUL_display}</span>.
 Stress index classification: <strong style="color:#f0edf1">${idx}</strong>. Chloride ingress and environmental loads under continuous monitoring.`;
     }
@@ -575,9 +592,7 @@ const handleWhatIf = debounce(async (loadVal) => {
         // Pulse dot
         const pulse = document.getElementById('status_pulse');
         if (pulse) {
-            const c = data.health_score > 80 ? COLORS.secondary
-                     : data.health_score > 50 ? COLORS.warning
-                     : COLORS.error;
+            const c = data.priority_color; // SSOT from backend
             pulse.style.background = c;
             pulse.style.boxShadow  = `0 0 8px ${c}CC`;
         }

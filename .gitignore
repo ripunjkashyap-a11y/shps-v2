@@ -102,6 +102,7 @@ features/*.csv
 models/*.pkl
 models/*.h5
 models/model_metrics.json
+models/*.json
 
 # Temporary / Test files
 stitch_mockup.html
@@ -114,9 +115,12 @@ tmp/
 # Portfolio & Local Workspace
 *.md
 !README.md
+!model_card.md
 *.png
 !assets/*.png
 shps-v2.code-workspace
 push.bat
 
 .agent/
+.claude/
+convert_models.py

@@ -1,6 +1,7 @@
+import os
 import pandas as pd
 import numpy as np
-import pickle
+import xgboost as xgb
 import shap
 
 FEATURE_COLUMNS = [
@@ -11,13 +12,14 @@ FEATURE_COLUMNS = [
 ]
 
 # ---- Load model & background data once at module import time ----
-with open('models/xgb_health.pkl', 'rb') as f:
-    _xgb_health_model = pickle.load(f)
+_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+_xgb_health_model = xgb.Booster()
+_xgb_health_model.load_model(os.path.join(_PROJECT_ROOT, 'models', 'xgb_health.json'))
 
 # Optimized: Using K-Means (100 centroids) to represent the 10,000-row background manifold.
 # This ensures interventional SHAP values are fast (<50ms) for UI responsiveness.
 try:
-    _bg_data = pd.read_csv('features/structural_data_processed.csv')[FEATURE_COLUMNS]
+    _bg_data = pd.read_csv(os.path.join(_PROJECT_ROOT, 'features', 'structural_data_processed.csv'))[FEATURE_COLUMNS]
     _bg_summary = shap.kmeans(_bg_data, 100)
     _explainer = shap.TreeExplainer(_xgb_health_model, _bg_summary, feature_perturbation='interventional')
 except Exception:

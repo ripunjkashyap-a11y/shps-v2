@@ -1,11 +1,3 @@
----
-title: SHPS v2.0 - Structural Health Prediction
-emoji: 🏗️
-colorFrom: blue
-colorTo: indigo
-sdk: docker
-pinned: true
----
 
 # SHPS v2.0 — Structural Health Prediction System
 
